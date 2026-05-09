@@ -121,9 +121,7 @@ func (c *GrantsClient) GetOpportunity(opportunityID string) (*GrantsOpportunity,
 
 // SyncAll fetches all recently posted opportunities (paginates).
 func (c *GrantsClient) SyncAll(keyword string, maxRecords int) ([]GrantsOpportunity, error) {
-	if keyword == "" {
-		keyword = "technology"
-	}
+	// Empty keyword = broad fetch, no restriction
 	if maxRecords <= 0 {
 		maxRecords = 500
 	}

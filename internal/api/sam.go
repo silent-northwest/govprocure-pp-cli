@@ -75,7 +75,6 @@ func (c *SAMClient) Search(query, setAside string, limit, offset int) (*SAMSearc
 	}
 
 	params := url.Values{}
-	params.Set("api_key", c.APIKey)
 	if query != "" {
 		params.Set("q", query)
 	}
@@ -88,7 +87,12 @@ func (c *SAMClient) Search(query, setAside string, limit, offset int) (*SAMSearc
 	}
 
 	reqURL := c.BaseURL + "?" + params.Encode()
-	resp, err := c.HTTPClient.Get(reqURL)
+	req, err := http.NewRequest("GET", reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("SAM.gov build request: %w", err)
+	}
+	req.Header.Set("X-Api-Key", c.APIKey)
+	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("SAM.gov request: %w", err)
 	}

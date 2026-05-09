@@ -236,8 +236,19 @@ type Grant struct {
 	RawJSON       string
 }
 
+// normalizeDate converts MM/DD/YYYY to YYYY-MM-DD for SQLite date comparisons.
+// If the input is already ISO 8601 or unrecognized, it is returned unchanged.
+func normalizeDate(s string) string {
+	if len(s) == 10 && s[2] == '/' && s[5] == '/' {
+		return s[6:10] + "-" + s[0:2] + "-" + s[3:5]
+	}
+	return s
+}
+
 // UpsertGrant inserts or replaces a grant record.
 func (d *DB) UpsertGrant(g *Grant) error {
+	g.CloseDate = normalizeDate(g.CloseDate)
+	g.PostDate = normalizeDate(g.PostDate)
 	_, err := d.conn.Exec(`
 		INSERT INTO grants (opportunity_id, title, agency, cfda_number, close_date, post_date, eligibility, synopsis, award_floor, award_ceiling, raw_json)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)

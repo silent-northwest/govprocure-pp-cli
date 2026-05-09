@@ -1,6 +1,6 @@
 module github.com/silentnw/govprocure-pp-cli
 
-go 1.22
+go 1.26.3
 
 require (
 	github.com/BurntSushi/toml v1.3.2
