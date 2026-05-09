@@ -522,7 +522,7 @@ func (s *Server) callTool(name string, args json.RawMessage) (ToolResult, error)
 	case "sync_status":
 		sources := []string{"grants", "sam", "awards"}
 		var sb strings.Builder
-		fmt.Fprintln(&sb, "**govprocure sync status:**\n")
+		fmt.Fprintf(&sb, "**govprocure sync status:**\n\n")
 		for _, src := range sources {
 			entry, err := s.db.LastSync(src)
 			if err != nil || entry == nil {

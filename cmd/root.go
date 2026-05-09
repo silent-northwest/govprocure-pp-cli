@@ -81,4 +81,6 @@ func init() {
 	rootCmd.AddCommand(newAuthCmd())
 	rootCmd.AddCommand(newSyncAllCmd())
 	rootCmd.AddCommand(newDoctorCmd())
+
+	rootCmd.Version = "1.0.0"
 }
