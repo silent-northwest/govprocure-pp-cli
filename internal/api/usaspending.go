@@ -84,14 +84,38 @@ type AwardSearchResponse struct {
 }
 
 // SearchAwards queries USASpending.gov for awards.
+// USASpending requires award_type_codes to come from a single group — you cannot
+// mix contracts (A/B/C/D) and grants (02/03/04/05) in one request.
+// When no types are specified we make two separate calls and merge.
 func (c *USASpendingClient) SearchAwards(agencies []string, cfda []string, awardTypes []string, limit int) (*AwardSearchResponse, error) {
 	if limit <= 0 {
 		limit = 25
 	}
+
 	if len(awardTypes) == 0 {
-		awardTypes = append(ContractAwardTypes, GrantAwardTypes...)
+		// Two separate calls, each with half the limit, then merge.
+		half := limit/2 + limit%2
+		grants, err := c.searchAwardGroup(agencies, cfda, GrantAwardTypes, half)
+		if err != nil {
+			// Grants failed — try contracts only.
+			return c.searchAwardGroup(agencies, cfda, ContractAwardTypes, limit)
+		}
+		contracts, err := c.searchAwardGroup(agencies, cfda, ContractAwardTypes, half)
+		if err != nil {
+			// Contracts failed — return grants only.
+			return grants, nil
+		}
+		merged := &AwardSearchResponse{
+			Results: append(grants.Results, contracts.Results...),
+			Limit:   limit,
+		}
+		return merged, nil
 	}
 
+	return c.searchAwardGroup(agencies, cfda, awardTypes, limit)
+}
+
+func (c *USASpendingClient) searchAwardGroup(agencies []string, cfda []string, awardTypes []string, limit int) (*AwardSearchResponse, error) {
 	filters := AwardFilters{
 		AwardTypeCodes: awardTypes,
 	}
@@ -105,7 +129,6 @@ func (c *USASpendingClient) SearchAwards(agencies []string, cfda []string, award
 	if len(cfda) > 0 {
 		filters.CFDANumbers = cfda
 	}
-	// Default to last 3 years
 	filters.TimeRange = []TimeRangeFilter{
 		{
 			StartDate: time.Now().AddDate(-3, 0, 0).Format("2006-01-02"),
@@ -228,8 +251,9 @@ func (c *USASpendingClient) SpendingTrends(agency string, years int) (*SpendingO
 		years = 5
 	}
 
+	// Use grants group only for spending trends (avoids mixed-group 422 error).
 	filters := AwardFilters{
-		AwardTypeCodes: append(ContractAwardTypes, GrantAwardTypes...),
+		AwardTypeCodes: GrantAwardTypes,
 		TimeRange: []TimeRangeFilter{
 			{
 				StartDate: time.Now().AddDate(-years, 0, 0).Format("2006-01-02"),
