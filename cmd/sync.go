@@ -135,7 +135,7 @@ func syncSAM(database *db.DB, cfg *config.Config, keyword string) (int, error) {
 		return 0, fmt.Errorf("SAM API key not configured — run: govprocure-pp-cli auth set-key --sam KEY")
 	}
 	client := api.NewSAMClient(cfg.SAMURL, cfg.SAMAPIKey)
-	opps, err := client.SyncAll(keyword, "", 500)
+	opps, err := client.SyncAll(keyword, "", 0)
 	if err != nil {
 		_ = database.LogSync("sam.gov", 0, "error", err.Error())
 		return 0, err

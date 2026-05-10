@@ -132,10 +132,9 @@ func (c *SAMClient) GetNotice(noticeID string) (*SAMOpportunity, error) {
 }
 
 // SyncAll paginates through all recent SAM opportunities.
+// SyncAll fetches all SAM.gov opportunities, paginating until complete.
+// maxRecords=0 means fetch everything available.
 func (c *SAMClient) SyncAll(query, setAside string, maxRecords int) ([]SAMOpportunity, error) {
-	if maxRecords <= 0 {
-		maxRecords = 500
-	}
 	const pageSize = 100
 	var all []SAMOpportunity
 	offset := 0
@@ -147,7 +146,9 @@ func (c *SAMClient) SyncAll(query, setAside string, maxRecords int) ([]SAMOpport
 		}
 		all = append(all, resp.OpportunitiesData...)
 		offset += len(resp.OpportunitiesData)
-		if len(resp.OpportunitiesData) < pageSize || offset >= maxRecords || offset >= resp.TotalRecords {
+
+		hitLimit := maxRecords > 0 && offset >= maxRecords
+		if len(resp.OpportunitiesData) < pageSize || offset >= resp.TotalRecords || hitLimit {
 			break
 		}
 	}

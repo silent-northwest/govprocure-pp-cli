@@ -119,13 +119,9 @@ func (c *GrantsClient) GetOpportunity(opportunityID string) (*GrantsOpportunity,
 	return nil, nil
 }
 
-// SyncAll fetches all recently posted opportunities (paginates).
+// SyncAll fetches all posted opportunities, paginating until complete.
+// maxRecords=0 means fetch everything grants.gov has.
 func (c *GrantsClient) SyncAll(keyword string, maxRecords int) ([]GrantsOpportunity, error) {
-	// Empty keyword = broad fetch, no restriction
-	if maxRecords <= 0 {
-		maxRecords = 500
-	}
-
 	const pageSize = 25
 	var all []GrantsOpportunity
 	offset := 0
@@ -137,7 +133,10 @@ func (c *GrantsClient) SyncAll(keyword string, maxRecords int) ([]GrantsOpportun
 		}
 		all = append(all, resp.OppHits...)
 		offset += len(resp.OppHits)
-		if len(resp.OppHits) < pageSize || offset >= maxRecords || offset >= resp.HitCount {
+
+		// Stop if: got fewer than a full page, hit the total, or hit user limit
+		hitLimit := maxRecords > 0 && offset >= maxRecords
+		if len(resp.OppHits) < pageSize || offset >= resp.HitCount || hitLimit {
 			break
 		}
 	}

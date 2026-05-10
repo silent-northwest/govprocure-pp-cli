@@ -51,7 +51,7 @@ func newSyncCmd(opts *output.Options) *cobra.Command {
 
 			fmt.Printf("Syncing SAM.gov (keyword=%q, set-aside=%q)...\n", keyword, saCode)
 			client := api.NewSAMClient(cfg.SAMURL, cfg.SAMAPIKey)
-			opps, err := client.SyncAll(keyword, saCode, 500)
+			opps, err := client.SyncAll(keyword, saCode, 0)
 			if err != nil {
 				_ = database.LogSync("sam.gov", 0, "error", err.Error())
 				return fmt.Errorf("SAM.gov sync: %w", err)

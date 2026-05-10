@@ -85,6 +85,6 @@ func newSyncCmd(opts *output.Options) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&keyword, "keyword", "", "keyword filter for sync")
-	cmd.Flags().IntVar(&maxRecords, "max", 500, "maximum records to sync")
+	cmd.Flags().IntVar(&maxRecords, "max", 0, "maximum records to sync (default: all)")
 	return cmd
 }
